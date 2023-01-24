@@ -1,0 +1,59 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+# logging
+coloredlogs = "*"
+colorama = "*"
+# misc
+docutils = "*"
+python-dotenv = "*"
+hashids = "*"
+mkdocs = "*"
+bpython = "*"
+importlib-metadata = "*"
+psycopg2-binary = "*"
+# testing
+coverage = "*"
+factory-boy = "*"
+responses = "*"
+Faker = "*"
+# aws
+boto3 = "*"
+watchtower = "*"
+# shortcuts/deployment
+invoke = "*"
+fabric = "*"
+uvicorn = "*"
+websockets = "*"
+# django-specific libs
+Django = "<4.0"
+djangorestframework = "<4.0"
+drf-yasg = "*"
+social-auth-app-django = "*"
+djangorestframework-simplejwt = "*"
+drf-nested-routers = "*"
+django-solo = "*"
+django-axes = "*"
+django-cors-headers = "*"
+django-modeladmin-reorder = "*"
+django-code-generator = "*"
+django-admin-interface = "*"
+django-stubs = "*"
+django-filter = "*"
+channels = "*"
+channels-redis = "==3.4.1"
+django-redis = "*"
+
+[requires]
+python_version = "3.9"
+
+[dev-packages]
+# linters
+flake8 = "*"
+mypy = "*"
+black = "*"
+#git
+pre-commit = "*"

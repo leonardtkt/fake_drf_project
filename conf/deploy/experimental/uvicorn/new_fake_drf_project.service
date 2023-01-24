@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve newtktapp-exp.wertkt.com
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/newtktapp-exp.wertkt.com
+Environment="PATH=/home/virtualenvs/newtktapp-exp.wertkt.com/bin"
+ExecStart=/home/virtualenvs/newtktapp-exp.wertkt.com/bin/uvicorn asgi:application --proxy-headers --env-file /var/www/newtktapp-exp.wertkt.com/.env --uds /var/www/socks/newtktapp-exp.wertkt.com.sock
+
+[Install]
+WantedBy=multi-user.target

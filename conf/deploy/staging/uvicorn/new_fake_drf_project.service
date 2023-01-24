@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve New Fake DRF project
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/newtktapp.wertkt.com
+Environment="PATH=/home/virtualenvs/newtktapp.wertkt.com/bin"
+ExecStart=/home/virtualenvs/newtktapp.wertkt.com/bin/uvicorn asgi:application --proxy-headers --env-file /var/www/newtktapp.wertkt.com/.env --uds /var/www/socks/newtktapp.wertkt.com.sock
+
+[Install]
+WantedBy=multi-user.target

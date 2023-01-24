@@ -1,0 +1,12 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+        args: [--commit-msg "black linter"]
+  - repo: local
+    hooks:
+      - id: migrations-check
+        language: system
+        name: Check for missing migrations
+        entry: bash -c "python manage.py makemigrations --check --dry-run"

@@ -1,0 +1,17 @@
+<h1>{ TITLE|safe }}</h1>
+
+<h2>{{ SUBTITLE|safe }}</h2>
+
+{% if TEXT %}
+<p>{{ TEXT|safe }}</p>
+{% endif %}
+
+{% if BUTTON_URL %}
+<a href="{{ BUTTON_URL }}"  target="_blank">
+  {{ BUTTON_TEXT|safe }}
+</a>
+{% endif %}
+
+<p><a href="{{ FRONT_URL }}" target="_blank">
+  Front Image Here
+</a></p>

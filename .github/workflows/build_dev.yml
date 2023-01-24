@@ -1,0 +1,163 @@
+# GitHub Actions docs
+# https://help.github.com/en/articles/about-github-actions
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+name: Build test
+
+on:
+  push:
+    branches:
+      - 'dev'
+      - 'staging'
+      - 'main'
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: "conf.settings.github"
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7.x
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7.x
+      - name: Extract branch name
+        id: extract_github
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      - name: Extract repository name
+        id: extract_repo
+        run: echo "##[set-output name=name;]$(echo ${GITHUB_REPOSITORY##*/})"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pipenv
+          pip install invoke
+          pipenv install --three
+      - name: Run migrations
+        run: |
+          pipenv run python manage.py migrate
+      - name: Run tests
+        id: tests
+        run: |
+          sleep 40s
+          inv test
+      ##########################################################################
+      # NOTE: SLACK_WEBHOOK NEEDED BEFORE UNCOMMENT THIS TO ALLOW NOTIFICATIONS
+      ##########################################################################
+      # - name: Notify tests success
+      #   if: success()
+      #   uses: 8398a7/action-slack@v1.1.2
+      #   with:
+      #     payload: |
+      #       {
+      #         "attachments": [{
+      #           "fallback": "Passed: tests on ${{ steps.extract_github.outputs.branch }} branch of ${{ steps.extract_repo.outputs.name }}",
+      #           "color": "#5a6aff",
+      #           "author_name": "${{ github.actor }}",
+      #           "title": "${{ github.workflow }}: passed on ${{ steps.extract_github.outputs.branch }} branch of ${{ steps.extract_repo.outputs.name }}",
+      #           "title_link": "https://github.com/${{ github.repository }}/actions",
+      #           "footer": "commit: ${{ github.sha }}",
+      #           "footer_icon": "https://slack-imgs.com/?c=1&o1=wi32.he32.si&url=https%3A%2F%2Fgithub.githubassets.com%2Ffavicon.ico"
+      #         }]
+      #       }
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} # required
+      # - name: Notify tests failed
+      #   if: failure() || cancelled()
+      #   uses: 8398a7/action-slack@v1.1.2
+      #   with:
+      #     payload: |
+      #       {
+      #         "attachments": [{
+      #           "fallback": "Failed: tests on ${{ steps.extract_github.outputs.branch }} of ${{ steps.extract_repo.outputs.name }}",
+      #           "color": "#ff0000",
+      #           "author_name": "${{ github.actor }}",
+      #           "title": "${{ github.workflow }}: failed on ${{ steps.extract_github.outputs.branch }} branch of ${{ steps.extract_repo.outputs.name }} ⚠️",
+      #           "title_link": "https://github.com/${{ github.repository }}/actions",
+      #           "footer": "commit: ${{ github.sha }}",
+      #           "footer_icon": "https://slack-imgs.com/?c=1&o1=wi32.he32.si&url=https%3A%2F%2Fgithub.githubassets.com%2Ffavicon.ico"
+      #         }]
+      #       }
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }} # required
+      ###################################################################################
+      # NOTE: HOST, USERNAME and KEY are NEEDED BEFORE UNCOMMENT THIS to allow deployment
+      ###################################################################################
+      # - name: Deploy on staging server
+      #   if: success() && steps.extract_github.outputs.branch == 'staging'
+      #   uses: appleboy/ssh-action@master
+      #   env:
+      #     PIPENV_VERBOSITY: -1
+      #   with:
+      #     host: ${{ secrets.HOST }}
+      #     username: ${{ secrets.USERNAME }}
+      #     key: ${{ secrets.KEY }}
+      #     script_stop: true
+      #     script: |
+      #       cd /var/www/${{ steps.extract_repo.outputs.name }}/
+      #       git pull
+      #       inv activate
+      #       inv sync
+      #       python manage.py collectstatic --noinput
+      #       chown www-data:www-data -R /var/www/${{ steps.extract_repo.outputs.name }}/
+      #       chown www-data:www-data -R /home/${{ steps.extract_repo.outputs.name }}/
+      #       sudo /etc/init.d/apache2 reload
+      ##################################################################################################
+      # NOTE: WEBHOOK_STAGING is NEEDED BEFORE UNCOMMENT THIS to allow slack notifications on deployment
+      ##################################################################################################
+      # - name: Notify deploy success
+      #   if: success() && steps.extract_github.outputs.branch == 'staging'
+      #   uses: 8398a7/action-slack@v1.1.2
+      #   with:
+      #     payload: |
+      #       {
+      #         "attachments": [{
+      #           "fallback": "${{ steps.extract_repo.outputs.name }} deployed by ${{ github.actor }}",
+      #           "color": "#5a6aff",
+      #           "author_name": "${{ github.actor }}",
+      #           "title": "${{ steps.extract_repo.outputs.name }} deployed",
+      #           "title_link": "https://github.com/${{ github.repository }}/actions",
+      #           "footer": "Webhook",
+      #           "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png"
+      #         }]
+      #       }
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required
+      #     SLACK_WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING }} # required
+      # - name: Notify deploy failed
+      #   if: (failure() || cancelled()) && steps.extract_github.outputs.branch == 'staging'
+      #   uses: 8398a7/action-slack@v1.1.2
+      #   with:
+      #     payload: |
+      #       {
+      #         "attachments": [{
+      #           "fallback": "${{ steps.extract_repo.outputs.name }} not deployed",
+      #           "color": "#ff0000",
+      #           "author_name": "${{ github.actor }}",
+      #           "title": "${{ steps.extract_repo.outputs.name }} not deployed",
+      #           "title_link": "https://github.com/${{ github.repository }}/actions",
+      #           "footer": "Webhook",
+      #           "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png"
+      #         }]
+      #       }
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required
+      #     SLACK_WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING }} # required

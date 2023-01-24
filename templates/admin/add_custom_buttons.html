@@ -1,0 +1,19 @@
+
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    <div class="submit-row">
+        <input id="btn-autologin" type="submit" value="Login as user" name="_autologin" style="background-color: darkblue;">
+    </div>
+    <script>
+        const btnAutologin = document.getElementById("btn-autologin");
+
+        btnAutologin.addEventListener('click', function(e) {
+            let response = confirm('Se connecter avec le compte de cet utilisateur ?');
+            if (!response) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}
