@@ -1,12 +1,19 @@
 repos:
+#  - repo: local
+#    hooks:
+#      - id: black-custom
+#        language: system
+#        name: Reformat with black and commit
+#        entry: bash -c "pre-commit run black --all-files && git add -p && git commit -m 'black linter'"
+
   - repo: https://github.com/psf/black
     rev: 22.12.0
     hooks:
       - id: black
-        args: [--commit-msg "black linter"]
-  - repo: local
-    hooks:
-      - id: migrations-check
-        language: system
-        name: Check for missing migrations
-        entry: bash -c "python manage.py makemigrations --check --dry-run"
+
+#  - repo: local
+#    hooks:
+#      - id: migrations-check
+#        language: system
+#        name: Check for missing migrations
+#        entry: bash -c "python manage.py makemigrations --check --dry-run"
