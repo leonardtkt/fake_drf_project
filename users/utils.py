@@ -10,3 +10,8 @@ def get_client_ip(request: HttpRequest) -> str:
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+def fake_func():
+    a = "hello"
+    return a
